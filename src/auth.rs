@@ -36,15 +36,11 @@ impl Token {
         
         if let Ok(r) = resp {
             let txt = r.into_string().unwrap();
-            // println!("{}", txt);
             let m3u8_url = re.captures(&txt);
 
             if let Some(u) = m3u8_url {
-                // for i in u {
-                //     println!("@@@=>{:?}", i);    
-                // }
                 let text = u.get(0).map_or("", |m| m.as_str());
-                // println!("@@@: {:?}", text);
+
                 return Some(String::from(text))
             }
         }
@@ -58,9 +54,8 @@ fn geturl(station: String) -> String {
 
 
 pub fn auth1() -> Result<ureq::Response, ureq::Error> {
-    // println!("auth1");
-
     let url = "https://radiko.jp/v2/api/auth1";
+
     let resp = ureq::get(url)
         .set("User-Agent", "curl/7.56.1")
         .set("Accept", "*/*")
@@ -69,11 +64,8 @@ pub fn auth1() -> Result<ureq::Response, ureq::Error> {
         .set("X-Radiko-User", "dummy_user")
         .set("X-Radiko-Device", "pc")
         .call();
-    // if Ok(r) = resp {
-    //     println!("{:?}", r);
-    // } 
-    resp
 
+    resp
 }
 
 pub fn partial_key(resp: Response) -> Token {
@@ -83,26 +75,20 @@ pub fn partial_key(resp: Response) -> Token {
     let keylength: usize = resp.header("x-radiko-keylength").unwrap().to_string().parse().unwrap();
     let keyoffset: usize = resp.header("x-radiko-keyoffset").unwrap().to_string().parse().unwrap();
 
-    // println!("{}\n{}\n{}", auth_token, keylength, keyoffset);
-    // let slice = &auth_token[keyoffset..keylength];
     let slice = auth_key.substring(keyoffset, keyoffset + keylength,);
-    // println!("{}", slice);
+
     let b = base64::encode(slice);
-    // println!("{}",b);
 
     Token::new(b, auth_token)
-    // token
+
 }
 
 #[cfg(test)]
 mod tests {
-    // use super::*;
-
-    use super::auth1;
+    use super::*;
 
     #[test]
     fn test_auth1() {
-        // auth1()
     }
 
 }
