@@ -1,27 +1,57 @@
-use radiko_rs::auth::*;
-use subprocess::{self};
+// Copyright (c) h49k 2021
+//
+// Permission to use, copy, modify, and distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+use m3u8_rs::playlist::Playlist;
+use radiko_rs::token::Token;
 
 fn main() {
-    let args:Vec<String> = std::env::args().skip(1).collect();
+    // Get first argument.
+    let args: Vec<String> = std::env::args().skip(1).collect();
     let station = &args[0];
 
+    let auth1_response = match Token::auth1() {
+        Ok(r) => r,
+        _ => return,
+    };
 
-    if let Ok(s) = auth1() {
-        let token = partial_key(s);
-        token.auth2();
+    let token = Token::gen_token(auth1_response);
+    token.auth2();
 
-        if let Some(url) = token.gen_temp_chunk_m3u8_url(station) {
-            println!("{}", url);
+    let h_resp = match token.get_playlist_text(station) {
+        Ok(r) => r,
+        _ => return,
+    };
 
-            let cmd = format!(
-                "ffplay -nodisp -loglevel quiet -headers 'X-Radiko-Authtoken: {}' -i '{}'",
-                token.authtoken, url
-            );
+    let ux = match h_resp.into_string() {
+        Ok(s) => s,
+        _ => return,
+    };
 
-            println!("{}", cmd);
-            let shell = subprocess::Exec::shell(cmd);
+    let m3u8 = m3u8_rs::parse_playlist_res(ux.as_bytes());
 
-            let _ = shell.popen();
-        }
-    }
+    let pl = match m3u8 {
+        Ok(Playlist::MasterPlaylist(p)) => p,
+        Ok(Playlist::MediaPlaylist(_)) => return,
+        Err(_) => return,
+    };
+
+    let mut vs = pl.variants;
+
+    let st = match vs.pop() {
+        Some(s) => s,
+        None => return,
+    };
+
+    token.exec_ffplay(st.uri);
 }
