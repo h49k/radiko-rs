@@ -24,7 +24,7 @@ impl Opts {
                                     .arg(Arg::with_name("station")
                                         .short("s")
                                         .long("station")
-                                        .value_name("STATION")
+                                        .value_name("STATION_CODE")
                                         .takes_value(true)
                                         .required(true))
                                     .get_matches();
