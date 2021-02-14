@@ -13,12 +13,13 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 use m3u8_rs::playlist::Playlist;
-use radiko_rs::token::Token;
+use radiko_rs::{token::Token,
+                opt::Opts,
+            };
 
 fn main() {
-    // Get first argument.
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    let station = &args[0];
+    let opts = Opts::get();
+    let station = opts.station();
 
     let auth1_response = match Token::auth1() {
         Ok(r) => r,

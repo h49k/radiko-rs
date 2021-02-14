@@ -1,6 +1,6 @@
 [package]
 name = "radiko-rs"
-version = "0.1.1"
+version = "0.1.3"
 authors = ["h49k"]
 edition = "2018"
 
@@ -12,3 +12,4 @@ substring = "1.4.5"
 base64 = "0.13.0"
 subprocess = "0.2.6"
 m3u8-rs = "1.0.7"
+clap = "2.33.3"
